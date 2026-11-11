@@ -13,17 +13,21 @@ jobs:
       # Works both ways: if you uploaded the project as a zip (any file called
       # TargetTracker-android-project*.zip, newest one wins) it is unpacked;
       # if you uploaded the unzipped files, they are built as they are.
+      # Works both ways: if you uploaded the project as a zip it is unpacked; if you uploaded
+      # the unzipped files, they are built as they are. With several zips in the repository the
+      # one with the highest version number (v0_06 beats v0_05) is used.
       - name: Unpack project (if uploaded as a zip)
         run: |
-          zip=$(ls -t TargetTracker-android-project*.zip 2>/dev/null | head -n 1 || true)
+          zip=$(ls TargetTracker-android-project*_v*.zip 2>/dev/null | sort -V | tail -n 1 || true)
+          if [ -z "$zip" ]; then zip=$(ls TargetTracker-android-project*.zip 2>/dev/null | sort -V | tail -n 1 || true); fi
           if [ -n "$zip" ]; then
             echo "Unpacking $zip"
             unzip -o "$zip"
           else
             echo "No zip found - building the files as uploaded"
           fi
-          ls -la
-          ls -la app
+          echo "=== BUILDING VERSION ==="
+          grep -E "versionCode|versionName" app/build.gradle
 
       - uses: actions/setup-java@v5
         with:
